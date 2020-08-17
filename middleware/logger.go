@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"path"
 	"runtime"
 	"sync"
 
@@ -34,23 +35,23 @@ type freedomLogger struct {
 
 // Print prints a log message without levels and colors.
 func (l *freedomLogger) Print(v ...interface{}) {
-	traceField, traceId := l.traceField()
-	v = append(v, traceField, traceId)
+	trace := l.traceField()
+	v = append(v, trace)
 	freedom.Logger().Print(v...)
 }
 
 // Printf formats according to a format specifier and writes to `Printer#Output` without levels and colors.
 func (l *freedomLogger) Printf(format string, args ...interface{}) {
-	traceField, traceId := l.traceField()
-	append := fmt.Sprintf(" %s:%s", traceField, traceId)
-	freedom.Logger().Printf(format+append, args...)
+	trace := l.traceField()
+	args = append(args, trace)
+	freedom.Logger().Printf(format, args...)
 }
 
 // Println prints a log message without levels and colors.
 // It adds a new line at the end, it overrides the `NewLine` option.
 func (l *freedomLogger) Println(v ...interface{}) {
-	traceField, traceId := l.traceField()
-	v = append(v, traceField, traceId)
+	trace := l.traceField()
+	v = append(v, trace)
 	freedom.Logger().Println(v...)
 }
 
@@ -58,8 +59,8 @@ func (l *freedomLogger) Println(v ...interface{}) {
 // This method can be used to use custom log levels if needed.
 // It adds a new line in the end.
 func (l *freedomLogger) Log(level golog.Level, v ...interface{}) {
-	traceField, traceId := l.traceField()
-	v = append(v, traceField, traceId)
+	trace := l.traceField()
+	v = append(v, trace)
 	freedom.Logger().Log(level, v...)
 }
 
@@ -67,18 +68,18 @@ func (l *freedomLogger) Log(level golog.Level, v ...interface{}) {
 // This method can be used to use custom log levels if needed.
 // It adds a new line in the end.
 func (l *freedomLogger) Logf(level golog.Level, format string, args ...interface{}) {
-	traceField, traceId := l.traceField()
-	append := fmt.Sprintf(" %s:%s", traceField, traceId)
-	freedom.Logger().Logf(level, format+append, args...)
+	trace := l.traceField()
+	args = append(args, trace)
+	freedom.Logger().Logf(level, format, args...)
 }
 
 // Fatal `os.Exit(1)` exit no matter the level of the freedomLogger.
 // If the freedomLogger's level is fatal, error, warn, info or debug
 // then it will print the log message too.
 func (l *freedomLogger) Fatal(v ...interface{}) {
-	callerField, callerValue := l.callerField()
-	traceField, traceId := l.traceField()
-	v = append(v, callerField, callerValue, traceField, traceId)
+	caller := l.callerField()
+	trace := l.traceField()
+	v = append(v, caller, trace)
 	freedom.Logger().Fatal(v...)
 }
 
@@ -86,81 +87,81 @@ func (l *freedomLogger) Fatal(v ...interface{}) {
 // If the freedomLogger's level is fatal, error, warn, info or debug
 // then it will print the log message too.
 func (l *freedomLogger) Fatalf(format string, args ...interface{}) {
-	callerField, callerValue := l.callerField()
-	traceField, traceId := l.traceField()
-	append := fmt.Sprintf(" %s:%s %s:%s", callerField, callerValue, traceField, traceId)
-	freedom.Logger().Fatalf(format+append, args...)
+	caller := l.callerField()
+	trace := l.traceField()
+	args = append(args, caller, trace)
+	freedom.Logger().Fatalf(format, args...)
 }
 
 // Error will print only when freedomLogger's Level is error, warn, info or debug.
 func (l *freedomLogger) Error(v ...interface{}) {
-	callerField, callerValue := l.callerField()
-	traceField, traceId := l.traceField()
-	v = append(v, callerField, callerValue, traceField, traceId)
+	caller := l.callerField()
+	trace := l.traceField()
+	v = append(v, caller, trace)
 	freedom.Logger().Error(v...)
 }
 
 // Errorf will print only when freedomLogger's Level is error, warn, info or debug.
 func (l *freedomLogger) Errorf(format string, args ...interface{}) {
-	callerField, callerValue := l.callerField()
-	traceField, traceId := l.traceField()
-	append := fmt.Sprintf(" %s:%s %s:%s", callerField, callerValue, traceField, traceId)
-	freedom.Logger().Errorf(format+append, args...)
+	caller := l.callerField()
+	trace := l.traceField()
+	args = append(args, caller, trace)
+	freedom.Logger().Errorf(format, args...)
 }
 
 // Warn will print when freedomLogger's Level is warn, info or debug.
 func (l *freedomLogger) Warn(v ...interface{}) {
-	callerField, callerValue := l.callerField()
-	traceField, traceId := l.traceField()
-	v = append(v, callerField, callerValue, traceField, traceId)
+	caller := l.callerField()
+	trace := l.traceField()
+	v = append(v, caller, trace)
 	freedom.Logger().Warn(v...)
 }
 
 // Warnf will print when freedomLogger's Level is warn, info or debug.
 func (l *freedomLogger) Warnf(format string, args ...interface{}) {
-	callerField, callerValue := l.callerField()
-	traceField, traceId := l.traceField()
-	append := fmt.Sprintf(" %s:%s %s:%s", callerField, callerValue, traceField, traceId)
-	freedom.Logger().Warnf(format+append, args...)
+	caller := l.callerField()
+	trace := l.traceField()
+	args = append(args, caller, trace)
+	freedom.Logger().Warnf(format, args...)
 }
 
 // Info will print when freedomLogger's Level is info or debug.
 func (l *freedomLogger) Info(v ...interface{}) {
-	traceField, traceId := l.traceField()
-	v = append(v, traceField, traceId)
+	trace := l.traceField()
+	v = append(v, trace)
 	freedom.Logger().Info(v...)
 }
 
 // Infof will print when freedomLogger's Level is info or debug.
 func (l *freedomLogger) Infof(format string, args ...interface{}) {
-	traceField, traceId := l.traceField()
-	append := fmt.Sprintf(" %s:%s", traceField, traceId)
-	freedom.Logger().Infof(format+append, args...)
+	trace := l.traceField()
+	args = append(args, trace)
+	freedom.Logger().Infof(format, args...)
 }
 
 // Debug will print when freedomLogger's Level is debug.
 func (l *freedomLogger) Debug(v ...interface{}) {
-	callerField, callerValue := l.callerField()
-	traceField, traceId := l.traceField()
-	v = append(v, callerField, callerValue, traceField, traceId)
+	caller := l.callerField()
+	trace := l.traceField()
+	v = append(v, caller, trace)
 	freedom.Logger().Debug(v...)
 }
 
 // Debugf will print when freedomLogger's Level is debug.
 func (l *freedomLogger) Debugf(format string, args ...interface{}) {
-	callerField, callerValue := l.callerField()
-	traceField, traceId := l.traceField()
-	append := fmt.Sprintf(" %s:%s %s:%s", callerField, callerValue, traceField, traceId)
-	freedom.Logger().Debugf(format+append, args...)
+	caller := l.callerField()
+	trace := l.traceField()
+	args = append(args, caller, trace)
+	freedom.Logger().Debugf(format, args...)
 }
 
 // traceField
-func (l *freedomLogger) traceField() (string, string) {
-	return l.traceName, l.traceId
+func (l *freedomLogger) traceField() golog.Fields {
+	return golog.Fields{l.traceName: l.traceId}
 }
 
-// traceField
-func (l *freedomLogger) callerField() (string, string) {
+// callerField
+func (l *freedomLogger) callerField() golog.Fields {
 	_, file, line, _ := runtime.Caller(2)
-	return "caller", fmt.Sprintf("%s:%d", file, line)
+	return golog.Fields{"caller": fmt.Sprintf("%s:%d", path.Base(file), line)}
 }

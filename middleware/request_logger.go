@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/8treenet/freedom"
+	"github.com/kataras/golog"
 	"github.com/kataras/iris/v12/context"
 
 	"github.com/ryanuber/columnize"
@@ -55,7 +56,7 @@ func (l *requestLoggerMiddleware) ServeHTTP(ctx context.Context) {
 	}
 
 	// all except latency to string
-	var status, ip, method, path string
+	var status, method, path string
 	var latency time.Duration
 	var startTime, endTime time.Time
 	startTime = time.Now()
@@ -81,7 +82,7 @@ func (l *requestLoggerMiddleware) ServeHTTP(ctx context.Context) {
 	}
 
 	if l.config.IP {
-		ip = ctx.RemoteAddr()
+		//ip = ctx.RemoteAddr()
 	}
 
 	if l.config.Method {
@@ -96,8 +97,7 @@ func (l *requestLoggerMiddleware) ServeHTTP(ctx context.Context) {
 		}
 	}
 
-	var message interface{}
-	var headerMessage interface{}
+	fieldsMessage := golog.Fields{}
 	if headerKeys := l.config.MessageHeaderKeys; len(headerKeys) > 0 {
 		bus := freedom.ToWorker(ctx).Bus()
 		for _, key := range headerKeys {
@@ -105,12 +105,7 @@ func (l *requestLoggerMiddleware) ServeHTTP(ctx context.Context) {
 			if msg == "" {
 				continue
 			}
-			msg = key + ":" + msg
-			if headerMessage == nil {
-				headerMessage = msg
-			} else {
-				headerMessage = fmt.Sprintf(" %v %v", headerMessage, msg)
-			}
+			fieldsMessage[key] = msg
 		}
 	}
 
@@ -121,12 +116,7 @@ func (l *requestLoggerMiddleware) ServeHTTP(ctx context.Context) {
 			msg = strings.Replace(msg, "\n", "", -1)
 			msg = strings.Replace(msg, " ", "", -1)
 			if msg != "" {
-				msg = "request:" + msg
-				if message == nil {
-					message = msg
-				} else {
-					message = fmt.Sprintf(" %v %v", message, msg)
-				}
+				fieldsMessage["request"] = msg
 			}
 		}
 	}
@@ -137,40 +127,15 @@ func (l *requestLoggerMiddleware) ServeHTTP(ctx context.Context) {
 			if msg == nil {
 				continue
 			}
-			msg = key + ":" + fmt.Sprint(msg)
-			if message == nil {
-				message = msg
-			} else {
-				message = fmt.Sprintf(" %v %v", message, msg)
-			}
+			fieldsMessage[key] = fmt.Sprint(msg)
 		}
 	}
+	fieldsMessage["status"] = status
+	fieldsMessage["latency"] = fmt.Sprint(latency)
+	fieldsMessage["method"] = method
+	fieldsMessage["path"] = path
 
-	// print the logs
-	if logFunc := l.config.LogFunc; logFunc != nil {
-		logFunc(endTime, latency, status, ip, method, path, headerMessage, message)
-		return
-	} else if logFuncCtx := l.config.LogFuncCtx; logFuncCtx != nil {
-		logFuncCtx(ctx, latency)
-		return
-	}
-
-	if l.config.Columns {
-		endTimeFormatted := endTime.Format("2006/01/02 - 15:04:05")
-		output := Columnize(endTimeFormatted, latency, status, ip, method, path, headerMessage, message)
-		ctx.Application().Logger().Printer.Output.Write([]byte(output))
-		return
-	}
-	// no new line, the framework's logger is responsible how to render each log.
-	line := fmt.Sprintf("%v %4v %s %s %s", status, latency, ip, method, path)
-	if headerMessage != nil {
-		line += fmt.Sprintf(" %v", headerMessage)
-	}
-	if message != nil {
-		line += fmt.Sprintf(" %v", message)
-	}
-
-	ctx.Application().Logger().Info(line)
+	ctx.Application().Logger().Info(fieldsMessage)
 }
 
 // Columnize formats the given arguments as columns and returns the formatted output,
