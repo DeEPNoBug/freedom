@@ -8,14 +8,15 @@ import (
 // See `Configuration` too.
 type skipperFunc func(ctx context.Context) bool
 
-// LoggerConfig contains the options for the logger middleware
+// RequestLoggerConfig contains the options for the logger middleware
 // can be optionally be passed to the `New`.
-type LoggerConfig struct {
+type RequestLoggerConfig struct {
 	IP                 bool
 	Query              bool
 	MessageContextKeys []string
 	MessageHeaderKeys  []string
 	RequestRawBody     bool
+	Title              string
 	// Status displays status code (bool).
 	//
 	// Defaults to true.
@@ -71,12 +72,13 @@ type LoggerConfig struct {
 // that have all boolean fields to true except `Columns`,
 // all strings are empty,
 // LogFunc and Skippers to nil as well.
-func DefaultConfig() *LoggerConfig {
-	return &LoggerConfig{
+func DefaultConfig() *RequestLoggerConfig {
+	return &RequestLoggerConfig{
 		IP:                 false,
 		Query:              true,
 		RequestRawBody:     true,
 		MessageContextKeys: []string{"response"},
+		Title:              "[access]",
 	}
 }
 

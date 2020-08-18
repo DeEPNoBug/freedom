@@ -113,5 +113,5 @@ func (l *requestLoggerMiddleware) ServeHTTP(ctx context.Context) {
 		fieldsMessage["query"] = rawQuery.Encode()
 	}
 
-	ctx.Application().Logger().Info(fieldsMessage)
+	ctx.Application().Logger().Info(l.config.Title, fieldsMessage)
 }
