@@ -14,7 +14,7 @@ func init() {
 		initiator.BindService(func() *Cart {
 			return &Cart{} //创建Cart领域服务
 		})
-		//控制器客户使用需要明确使用 InjectController
+		//控制器客户需要明确使用 InjectController
 		initiator.InjectController(func(ctx freedom.Context) (service *Cart) {
 			initiator.GetService(ctx, &service)
 			return
