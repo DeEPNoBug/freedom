@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/8treenet/freedom"
@@ -90,11 +89,9 @@ func (l *requestLoggerMiddleware) ServeHTTP(ctx context.Context) {
 		fieldsMessage[l.config.traceName] = traceInfo
 	}
 
-	if l.config.RequestRawBody {
+	if l.config.RequestRawBody && len(reqBodyBys) > 0 {
 		reqBodyBys = reqBodyBys[:512]
 		msg := string(reqBodyBys)
-		msg = strings.Replace(msg, "\n", "", -1)
-		msg = strings.Replace(msg, " ", "", -1)
 		if msg != "" {
 			fieldsMessage["request"] = msg
 		}
