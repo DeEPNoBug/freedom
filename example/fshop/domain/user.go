@@ -9,9 +9,11 @@ import (
 
 func init() {
 	freedom.Prepare(func(initiator freedom.Initiator) {
+		//绑定创建领域服务函数到框架，框架会根据客户的使用做依赖倒置和依赖注入的处理。
 		initiator.BindService(func() *User {
-			return &User{}
+			return &User{} //创建User领域服务
 		})
+		//控制器客户使用需要明确使用 InjectController
 		initiator.InjectController(func(ctx freedom.Context) (service *User) {
 			initiator.GetService(ctx, &service)
 			return
