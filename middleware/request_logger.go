@@ -10,8 +10,6 @@ import (
 	"github.com/8treenet/freedom"
 	"github.com/kataras/golog"
 	"github.com/kataras/iris/v12/context"
-
-	"github.com/ryanuber/columnize"
 )
 
 // NewRequestLogger .
@@ -116,27 +114,4 @@ func (l *requestLoggerMiddleware) ServeHTTP(ctx context.Context) {
 	}
 
 	ctx.Application().Logger().Info(fieldsMessage)
-}
-
-// Columnize formats the given arguments as columns and returns the formatted output,
-// note that it appends a new line to the end.
-func Columnize(nowFormatted string, latency time.Duration, status, ip, method, path string, message interface{}, headerMessage interface{}) string {
-	titles := "Time | Status | Latency | IP | Method | Path"
-	line := fmt.Sprintf("%s | %v | %4v | %s | %s | %s", nowFormatted, status, latency, ip, method, path)
-	if message != nil {
-		titles += " | Message"
-		line += fmt.Sprintf(" | %v", message)
-	}
-
-	if headerMessage != nil {
-		titles += " | HeaderMessage"
-		line += fmt.Sprintf(" | %v", headerMessage)
-	}
-
-	outputC := []string{
-		titles,
-		line,
-	}
-	output := columnize.SimpleFormat(outputC) + "\n"
-	return output
 }
