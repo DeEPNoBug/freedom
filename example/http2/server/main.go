@@ -29,7 +29,7 @@ func installMiddleware(app freedom.Application) {
 		NewRequestLogger和NewRuntimeLogger 默认读取了总线里的x-request-id, 所有上下游服务打印日志全部都携带x-request-id
 	*/
 	app.InstallMiddleware(middleware.NewTrace("x-request-id"))
-	app.InstallMiddleware(middleware.NewRequestLogger("x-request-id", true))
+	app.InstallMiddleware(middleware.NewRequestLogger("x-request-id"))
 
 	//http client安装普罗米修斯监控
 	requests.InstallPrometheus(conf.Get().App.Other["service_name"].(string), freedom.Prometheus())
