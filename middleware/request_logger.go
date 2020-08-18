@@ -26,8 +26,7 @@ func NewRequestLogger(traceIDName string, loggerConf ...*LoggerConfig) func(cont
 }
 
 type requestLoggerMiddleware struct {
-	config      *LoggerConfig
-	traceIDName string
+	config *LoggerConfig
 }
 
 func NewRequest(cfg *LoggerConfig) context.Handler {
@@ -86,9 +85,9 @@ func (l *requestLoggerMiddleware) ServeHTTP(ctx context.Context) {
 		}
 	}
 	bus := freedom.ToWorker(ctx).Bus()
-	traceInfo := bus.Get(l.traceIDName)
+	traceInfo := bus.Get(l.config.traceName)
 	if traceInfo != "" {
-		fieldsMessage[l.traceIDName] = traceInfo
+		fieldsMessage[l.config.traceName] = traceInfo
 	}
 
 	if l.config.RequestRawBody {
