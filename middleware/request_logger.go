@@ -21,7 +21,6 @@ func NewRequestLogger(traceIDName string, loggerConf ...*LoggerConfig) func(cont
 	if len(loggerConf) > 0 {
 		l = loggerConf[0]
 	}
-	l.MessageHeaderKeys = append(l.MessageHeaderKeys, traceIDName)
 	l.traceName = traceIDName
 	return NewRequest(l)
 }
@@ -76,14 +75,20 @@ func (l *requestLoggerMiddleware) ServeHTTP(ctx context.Context) {
 	}
 
 	if headerKeys := l.config.MessageHeaderKeys; len(headerKeys) > 0 {
-		bus := freedom.ToWorker(ctx).Bus()
+		header := ctx.Request().Header
 		for _, key := range headerKeys {
-			msg := bus.Get(key)
+			header.Get(key)
+			msg := header.Get(key)
 			if msg == "" {
 				continue
 			}
 			fieldsMessage[key] = msg
 		}
+	}
+	bus := freedom.ToWorker(ctx).Bus()
+	traceInfo := bus.Get(l.traceIDName)
+	if traceInfo != "" {
+		fieldsMessage[l.traceIDName] = traceInfo
 	}
 
 	if l.config.RequestRawBody {
