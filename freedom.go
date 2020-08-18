@@ -56,6 +56,9 @@ type (
 
 	Configuration    = iris.Configuration
 	BeforeActivation = mvc.BeforeActivation
+
+	LogFields = golog.Fields
+	LogRow    = golog.Log
 )
 
 // NewApplication .
