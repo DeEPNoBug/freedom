@@ -13,7 +13,7 @@ import (
 )
 
 // NewRequestLogger .
-func NewRequestLogger(traceIDName string, loggerConf ...*LoggerConfig) func(context.Context) {
+func NewRequestLogger(traceIDName string, loggerConf ...*RequestLoggerConfig) func(context.Context) {
 	l := DefaultConfig()
 	if len(loggerConf) > 0 {
 		l = loggerConf[0]
@@ -23,10 +23,10 @@ func NewRequestLogger(traceIDName string, loggerConf ...*LoggerConfig) func(cont
 }
 
 type requestLoggerMiddleware struct {
-	config *LoggerConfig
+	config *RequestLoggerConfig
 }
 
-func NewRequest(cfg *LoggerConfig) context.Handler {
+func NewRequest(cfg *RequestLoggerConfig) context.Handler {
 	l := &requestLoggerMiddleware{config: cfg}
 	return l.ServeHTTP
 }
