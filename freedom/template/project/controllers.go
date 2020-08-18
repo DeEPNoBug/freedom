@@ -69,7 +69,7 @@ func controllerTemplate() string {
 	// PostHello handles the POST: /hello route.
 	func (c *Default) CustomHello() freedom.Result {
 		method := c.Worker.IrisContext().Request().Method
-		c.Worker.Logger().Info(method, "CustomHello")
+		c.Worker.Logger().Info("CustomHello", freedom.LogFields{"method": method})
 		return &infra.JSONResponse{Object: method + "CustomHello"}
 	}
 	
