@@ -50,7 +50,7 @@ func installDatabase(app freedom.Application) {
 }
 
 func installLogger(app freedom.Application) {
-	//logger中间件，每一行日志都会触发回调，返回true停止。
+	//logger中间件，每一行日志都会触发回调。如果返回true，将停止中间件遍历回调。
 	app.Logger().Handle(func(value *freedom.LogRow) bool {
 		fieldKeys := []string{}
 		for k := range value.Fields {
