@@ -2,6 +2,8 @@
 package main
 
 import (
+	"fmt"
+	"sort"
 	"time"
 
 	"github.com/8treenet/freedom/example/base/server/conf"
@@ -13,15 +15,14 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"github.com/sirupsen/logrus"
 )
 
 func main() {
 	app := freedom.NewApplication()
+	installLogger(app)
 	/*
 		installDatabase(app)
 		installRedis(app)
-		installLogrus(app)  // Install the third logger
 
 		http2 h2c service
 		h2caddrRunner := app.CreateH2CRunner(conf.Get().App.Other["listen_addr"].(string))
@@ -81,8 +82,31 @@ func installRedis(app freedom.Application) {
 	})
 }
 
-func installLogrus(app freedom.Application) {
-	logrus.SetLevel(logrus.InfoLevel)
-	logrus.SetFormatter(&logrus.JSONFormatter{TimestampFormat: "2006-01-02 15:04:05.000"})
-	freedom.Logger().Install(logrus.StandardLogger())
+func installLogger(app freedom.Application) {
+	//logger中间件，每一行日志都会触发回调，返回true停止。
+	app.Logger().Handle(func(value *freedom.LogRow) bool {
+		fieldKeys := []string{}
+		for k := range value.Fields {
+			fieldKeys = append(fieldKeys, k)
+		}
+		sort.Strings(fieldKeys)
+		for i := 0; i < len(fieldKeys); i++ {
+			fieldMsg := value.Fields[fieldKeys[i]]
+			if value.Message != "" {
+				value.Message += " "
+			}
+			value.Message += fmt.Sprintf("%s:%v", fieldKeys[i], fieldMsg)
+		}
+		return false
+
+		/*
+			logrus.WithFields(value.Fields).Info(value.Message)
+			return true
+		*/
+		/*
+			zapLogger, _ := zap.NewProduction()
+			zapLogger.Info(value.Message)
+			return true
+		*/
+	})
 }

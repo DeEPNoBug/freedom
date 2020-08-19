@@ -40,6 +40,20 @@ func (c *Default) Get() freedom.Result {
 
 // GetHello handles the GET: /hello route.
 func (c *Default) GetHello() string {
+	field := freedom.LogFields{
+		"framework": "freedom",
+		"like":      "DDD",
+	}
+	c.Worker.Logger().Info("hello", field)
+	c.Worker.Logger().Infof("hello %s", "format", field)
+	c.Worker.Logger().Debug("hello", field)
+	c.Worker.Logger().Debugf("hello %s", "format", field)
+	c.Worker.Logger().Error("hello", field)
+	c.Worker.Logger().Errorf("hello %s", "format", field)
+	c.Worker.Logger().Warn("hello", field)
+	c.Worker.Logger().Warnf("hello %s", "format", field)
+	c.Worker.Logger().Print("hello")
+	c.Worker.Logger().Println("hello")
 	return "hello"
 }
 
