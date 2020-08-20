@@ -165,6 +165,7 @@ type Application interface {
 	Start(f func(starter Starter))
 	InstallBusMiddleware(handle ...BusHandler)
 	InstallSerializer(marshal func(v interface{}) ([]byte, error), unmarshal func(data []byte, v interface{}) error)
+	CallService(fun interface{}, worker ...Worker)
 }
 
 func ToWorker(ctx Context) Worker {
