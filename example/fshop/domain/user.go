@@ -42,6 +42,7 @@ func (s *User) ChangePassword(userId int, newPassword, oldPassword string) (e er
 
 	//使用用户仓库持久化实体
 	e = s.UserRepo.Save(userEntity)
+	s.Worker.Logger().Infof("ChangePassword newPassword:%s oldPassword:%s err:%v", newPassword, oldPassword, e)
 	return
 }
 
