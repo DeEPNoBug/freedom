@@ -88,7 +88,6 @@ func (l *requestLoggerMiddleware) ServeHTTP(ctx context.Context) {
 	}
 
 	if l.config.RequestRawBody && len(reqBodyBys) > 0 {
-		reqBodyBys = reqBodyBys[:512]
 		msg := string(reqBodyBys)
 		if msg != "" {
 			fieldsMessage["request"] = msg

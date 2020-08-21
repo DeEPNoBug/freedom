@@ -2,23 +2,17 @@
 package main
 
 import (
-	"fmt"
-	"sort"
-
 	"github.com/8treenet/freedom"
 	_ "github.com/8treenet/freedom/example/http2/adapter/controllers"
 	"github.com/8treenet/freedom/example/http2/server/conf"
 	"github.com/8treenet/freedom/infra/requests"
 	"github.com/8treenet/freedom/middleware"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"github.com/sirupsen/logrus"
 )
 
 func main() {
 	app := freedom.NewApplication()
-	installLogger(app)
 	installMiddleware(app)
-	installLogrus(app)
 
 	//http2 h2c 服务
 	h2caddrRunner := app.CreateH2CRunner(conf.Get().App.Other["listen_addr"].(string))
@@ -26,25 +20,21 @@ func main() {
 }
 
 func installMiddleware(app freedom.Application) {
+	//Recover中间件
 	app.InstallMiddleware(middleware.NewRecover())
-	/*
-		设置框架自带中间件,可重写
-		NewTrace默认设置了总线, 下游服务和事件消费者服务都会拿到x-request-id
-		NewRequestLogger和NewRuntimeLogger 默认读取了总线里的x-request-id, 所有上下游服务打印日志全部都携带x-request-id
-	*/
+	//Trace链路中间件
 	app.InstallMiddleware(middleware.NewTrace("x-request-id"))
+	//日志中间件，每个请求一个logger
 	app.InstallMiddleware(middleware.NewRequestLogger("x-request-id"))
-
-	//http client安装普罗米修斯监控
+	//logRow中间件，每一行日志都会触发回调。如果返回true，将停止中间件遍历回调。
+	app.Logger().Handle(middleware.DefaultLogRowHandle)
+	//HttpClient 普罗米修斯中间件，监控下游的API请求。
 	requests.InstallPrometheus(conf.Get().App.Other["service_name"].(string), freedom.Prometheus())
+	//总线中间件，处理上下游透传的Header
 	app.InstallBusMiddleware(middleware.NewBusFilter())
-	app.InstallBusMiddleware(newBus(conf.Get().App.Other["service_name"].(string)))
-}
 
-func installLogrus(app freedom.Application) {
-	logrus.SetLevel(logrus.InfoLevel)
-	logrus.SetFormatter(&logrus.JSONFormatter{TimestampFormat: "2006-01-02 15:04:05.000"})
-	freedom.Logger().Install(logrus.StandardLogger())
+	//自定义
+	app.InstallBusMiddleware(newBus(conf.Get().App.Other["service_name"].(string)))
 }
 
 // newBus 自定义总线中间件示例.
@@ -54,33 +44,4 @@ func newBus(serviceName string) func(freedom.Worker) {
 		bus := run.Bus()
 		bus.Add("x-service-name", serviceName)
 	}
-}
-
-func installLogger(app freedom.Application) {
-	//logger中间件，每一行日志都会触发回调。如果返回true，将停止中间件遍历回调。
-	app.Logger().Handle(func(value *freedom.LogRow) bool {
-		fieldKeys := []string{}
-		for k := range value.Fields {
-			fieldKeys = append(fieldKeys, k)
-		}
-		sort.Strings(fieldKeys)
-		for i := 0; i < len(fieldKeys); i++ {
-			fieldMsg := value.Fields[fieldKeys[i]]
-			if value.Message != "" {
-				value.Message += " "
-			}
-			value.Message += fmt.Sprintf("%s:%v", fieldKeys[i], fieldMsg)
-		}
-		return false
-
-		/*
-			logrus.WithFields(value.Fields).Info(value.Message)
-			return true
-		*/
-		/*
-			zapLogger, _ := zap.NewProduction()
-			zapLogger.Info(value.Message)
-			return true
-		*/
-	})
 }
