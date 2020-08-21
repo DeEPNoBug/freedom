@@ -22,5 +22,9 @@ func callService(fun interface{}, worker ...Worker) {
 	}
 	newService := globalApp.pool.pop(worker[0], serviceObj)
 	reflect.ValueOf(fun).Call([]reflect.Value{reflect.ValueOf(newService)})
+
+	if worker[0].IsDeferRecycle() {
+		return
+	}
 	globalApp.pool.free(newService)
 }
